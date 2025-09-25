@@ -28,9 +28,8 @@
             margin-bottom: 10px;
             font-weight: bold;
         }
-        textarea {
+        textarea, input[type="text"] {
             width: calc(100% - 22px);
-            height: 150px;
             padding: 10px;
             margin-bottom: 20px;
             border: 1px solid #ddd;
@@ -38,7 +37,7 @@
             font-size: 14px;
             resize: vertical;
         }
-        button {
+        button.generate-button {
             display: block;
             width: 100%;
             padding: 12px;
@@ -51,7 +50,7 @@
             cursor: pointer;
             margin-bottom: 20px;
         }
-        button:hover {
+        button.generate-button:hover {
             background-color: #45a049;
         }
         #result-container {
@@ -59,7 +58,6 @@
             border: 1px solid #c8e6c9;
             padding: 15px;
             border-radius: 5px;
-            word-wrap: break-word;
             margin-top: 20px;
             max-height: 500px;
             overflow-y: auto;
@@ -80,6 +78,7 @@
         }
         .message-row .buttons {
             flex-shrink: 0;
+            white-space: nowrap;
         }
         .copy-button, .wa-link {
             display: inline-block;
@@ -109,7 +108,7 @@
     <p>Atur URL dan template pesan di bawah ini. Cukup atur sekali saja.</p>
     
     <label for="baseUrlInput">URL Undangan Web:</label>
-    <input type="text" id="baseUrlInput" placeholder="https://arima.dina.arinvitation.my.id//" style="width: calc(100% - 22px); padding: 10px; margin-bottom: 20px;">
+    <input type="text" id="baseUrlInput" placeholder="Contoh: https://divadanvian.arinvitation.my.id/">
 
     <label for="templatePesan">Template Pesan:</label>
     <textarea id="templatePesan" rows="4">Yth. [nama_tamu],
@@ -118,15 +117,16 @@ Untuk detail, kunjungi undangan web kami: [url_undangan]</textarea>
     
     <hr>
 
-    <p>Tempelkan data tamu di bawah ini. Formatnya harus: <strong>Nama Tamu, Nomor WA (tanpa +62)</strong>. Setiap data tamu harus di baris baru.</p>
+    <p>Tempelkan data tamu di bawah ini. Formatnya harus: <strong>Nama Tamu</strong>. Setiap nama harus di baris baru.</p>
     <p><strong>Contoh:</strong><br>
-    Andi Setiawan,6281234567890<br>
-    Budi & Keluarga,6289876543210</p>
+    Andi Setiawan<br>
+    Budi & Keluarga<br>
+    Keluarga Besar Ahmad</p>
     
     <label for="dataInput">Data Tamu:</label>
     <textarea id="dataInput" placeholder="Tempel data di sini..."></textarea>
 
-    <button onclick="generateMessages()">Generate Pesan</button>
+    <button class="generate-button" onclick="generateMessages()">Generate Pesan</button>
 
     <div id="result-container">
         <h2>Daftar Pesan Siap Kirim:</h2>
@@ -141,7 +141,6 @@ Untuk detail, kunjungi undangan web kami: [url_undangan]</textarea>
         const templatePesan = document.getElementById('templatePesan').value;
         const messagesOutput = document.getElementById('messages-output');
         
-        // Bersihkan hasil sebelumnya
         messagesOutput.innerHTML = '';
 
         if (!baseUrl) {
@@ -157,17 +156,8 @@ Untuk detail, kunjungi undangan web kami: [url_undangan]</textarea>
         }
 
         lines.forEach(line => {
-            const parts = line.split(',');
-            if (parts.length < 2) {
-                const errorMessage = document.createElement('p');
-                errorMessage.style.color = 'red';
-                errorMessage.textContent = `Error: Format data tidak valid di baris "${line}". Pastikan formatnya "Nama,Nomor".`;
-                messagesOutput.appendChild(errorMessage);
-                return;
-            }
-
-            const namaTamu = parts[0].trim();
-            const nomorWa = parts[1].trim();
+            const namaTamu = line.trim();
+            if (!namaTamu) return;
             
             const encodedNama = encodeURIComponent(namaTamu);
             const fullUrl = `${baseUrl}?to=${encodedNama}`;
@@ -182,7 +172,7 @@ Untuk detail, kunjungi undangan web kami: [url_undangan]</textarea>
                 <span>${namaTamu}</span>
                 <div class="buttons">
                     <button class="copy-button" onclick="copyToClipboard('${btoa(finalPesan)}')">Salin</button>
-                    <a href="https://wa.me/${nomorWa}?text=${encodeURIComponent(finalPesan)}" target="_blank" class="wa-link">Kirim WA</a>
+                    <a href="https://wa.me/?text=${encodeURIComponent(finalPesan)}" target="_blank" class="wa-link">Kirim WA</a>
                 </div>
             `;
             messagesOutput.appendChild(messageRow);
