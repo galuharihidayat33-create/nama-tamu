@@ -3,44 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator Pesan WA Undangan</title>
+    <title>Generator Pesan Blasting Undangan</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             color: #333;
             padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
         }
         .container {
             background-color: #fff;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
+            max-width: 800px;
+            margin: 20px auto;
         }
-        h1 {
+        h1, h2 {
             color: #4CAF50;
-            margin-bottom: 20px;
+            text-align: center;
         }
         label {
             display: block;
             margin-bottom: 10px;
             font-weight: bold;
-            text-align: left;
         }
-        input[type="text"] {
+        textarea {
             width: calc(100% - 22px);
+            height: 150px;
             padding: 10px;
             margin-bottom: 20px;
             border: 1px solid #ddd;
             border-radius: 5px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
             font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background-color: #45a049;
         }
         #result-container {
             background-color: #e8f5e9;
@@ -48,16 +60,30 @@
             padding: 15px;
             border-radius: 5px;
             word-wrap: break-word;
-            text-align: left;
-            min-height: 150px;
+            margin-top: 20px;
+            max-height: 500px;
+            overflow-y: auto;
         }
-        .message-box {
-            padding: 10px 0;
+        .message-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .message-row span {
+            font-weight: bold;
+            flex: 1;
+        }
+        .message-row .buttons {
+            flex-shrink: 0;
         }
         .copy-button, .wa-link {
             display: inline-block;
-            margin-top: 10px;
-            padding: 10px 15px;
+            padding: 8px 12px;
             font-size: 14px;
             font-weight: bold;
             color: #fff;
@@ -66,91 +92,107 @@
             border-radius: 5px;
             cursor: pointer;
             text-decoration: none;
-            white-space: nowrap;
         }
         .wa-link {
             background-color: #25d366;
             margin-left: 10px;
         }
         .copy-button:hover, .wa-link:hover {
-            opacity: 0.9;
-        }
-        #templatePesan {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            resize: vertical;
+            opacity: 0.8;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Generator Pesan WA Undangan</h1>
-    <label for="namaTamuInput">Masukkan Nama Tamu:</label>
-    <input type="text" id="namaTamuInput" placeholder="Contoh: Andi & Keluarga" autofocus>
+    <h1>Generator Pesan Blasting Undangan</h1>
+    <p>Atur URL dan template pesan di bawah ini. Cukup atur sekali saja.</p>
     
+    <label for="baseUrlInput">URL Undangan Web:</label>
+    <input type="text" id="baseUrlInput" placeholder="https://arima.dina.arinvitation.my.id//" style="width: calc(100% - 22px); padding: 10px; margin-bottom: 20px;">
+
     <label for="templatePesan">Template Pesan:</label>
     <textarea id="templatePesan" rows="4">Yth. [nama_tamu],
 Kami mengundang Bapak/Ibu/Saudara/i untuk hadir di pernikahan kami.
 Untuk detail, kunjungi undangan web kami: [url_undangan]</textarea>
+    
+    <hr>
+
+    <p>Tempelkan data tamu di bawah ini. Formatnya harus: <strong>Nama Tamu, Nomor WA (tanpa +62)</strong>. Setiap data tamu harus di baris baru.</p>
+    <p><strong>Contoh:</strong><br>
+    Andi Setiawan,6281234567890<br>
+    Budi & Keluarga,6289876543210</p>
+    
+    <label for="dataInput">Data Tamu:</label>
+    <textarea id="dataInput" placeholder="Tempel data di sini..."></textarea>
+
+    <button onclick="generateMessages()">Generate Pesan</button>
 
     <div id="result-container">
-        <p id="info-message">Isi nama tamu untuk mendapatkan pesan yang siap dikirim.</p>
-        <div id="message-output" style="display:none;">
-            <p><strong>Pesan:</strong></p>
-            <p id="pesan-teks"></p>
-            <button class="copy-button" onclick="copyMessage()">Salin Pesan</button>
-            <a id="wa-link" class="wa-link" href="#" target="_blank">Kirim via WA</a>
-        </div>
+        <h2>Daftar Pesan Siap Kirim:</h2>
+        <div id="messages-output"></div>
     </div>
 </div>
 
 <script>
-    const namaTamuInput = document.getElementById('namaTamuInput');
-    const templatePesan = document.getElementById('templatePesan');
-    const infoMessage = document.getElementById('info-message');
-    const messageOutput = document.getElementById('message-output');
-    const pesanTeks = document.getElementById('pesan-teks');
-    const waLink = document.getElementById('wa-link');
+    function generateMessages() {
+        const baseUrl = document.getElementById('baseUrlInput').value;
+        const dataInput = document.getElementById('dataInput').value;
+        const templatePesan = document.getElementById('templatePesan').value;
+        const messagesOutput = document.getElementById('messages-output');
+        
+        // Bersihkan hasil sebelumnya
+        messagesOutput.innerHTML = '';
 
-    // GANTI URL INI DENGAN URL UNDANGAN ANDA
-    const baseUrl = 'https://arima.dina.arinvitation.my.id/';
+        if (!baseUrl) {
+            messagesOutput.innerHTML = '<p style="color:red; text-align:center;">URL Undangan Web tidak boleh kosong.</p>';
+            return;
+        }
+        
+        const lines = dataInput.split('\n').filter(line => line.trim() !== '');
 
-    namaTamuInput.addEventListener('input', updateMessage);
-    templatePesan.addEventListener('input', updateMessage);
-
-    function updateMessage() {
-        let namaTamu = namaTamuInput.value;
-        let pesan = templatePesan.value;
-
-        if (namaTamu.trim() === '') {
-            infoMessage.style.display = 'block';
-            messageOutput.style.display = 'none';
+        if (lines.length === 0) {
+            messagesOutput.innerHTML = '<p style="color:red; text-align:center;">Tidak ada data yang dimasukkan. Silakan isi data tamu.</p>';
             return;
         }
 
-        infoMessage.style.display = 'none';
-        messageOutput.style.display = 'block';
+        lines.forEach(line => {
+            const parts = line.split(',');
+            if (parts.length < 2) {
+                const errorMessage = document.createElement('p');
+                errorMessage.style.color = 'red';
+                errorMessage.textContent = `Error: Format data tidak valid di baris "${line}". Pastikan formatnya "Nama,Nomor".`;
+                messagesOutput.appendChild(errorMessage);
+                return;
+            }
 
-        const encodedNama = encodeURIComponent(namaTamu);
-        const fullUrl = `${baseUrl}?to=${encodedNama}`;
+            const namaTamu = parts[0].trim();
+            const nomorWa = parts[1].trim();
+            
+            const encodedNama = encodeURIComponent(namaTamu);
+            const fullUrl = `${baseUrl}?to=${encodedNama}`;
+            
+            const finalPesan = templatePesan
+                .replace(/\[nama_tamu\]/g, namaTamu)
+                .replace(/\[url_undangan\]/g, fullUrl);
 
-        const finalPesan = pesan
-            .replace(/\[nama_tamu\]/g, namaTamu)
-            .replace(/\[url_undangan\]/g, fullUrl);
-
-        pesanTeks.innerHTML = finalPesan.replace(/\n/g, '<br>');
-        waLink.href = `https://wa.me/?text=${encodeURIComponent(finalPesan)}`;
+            const messageRow = document.createElement('div');
+            messageRow.className = 'message-row';
+            messageRow.innerHTML = `
+                <span>${namaTamu}</span>
+                <div class="buttons">
+                    <button class="copy-button" onclick="copyToClipboard('${btoa(finalPesan)}')">Salin</button>
+                    <a href="https://wa.me/${nomorWa}?text=${encodeURIComponent(finalPesan)}" target="_blank" class="wa-link">Kirim WA</a>
+                </div>
+            `;
+            messagesOutput.appendChild(messageRow);
+        });
     }
 
-    function copyMessage() {
-        const textToCopy = pesanTeks.textContent;
+    function copyToClipboard(encodedText) {
+        const decodedText = atob(encodedText);
         const tempTextArea = document.createElement('textarea');
-        tempTextArea.value = textToCopy;
+        tempTextArea.value = decodedText;
         document.body.appendChild(tempTextArea);
         tempTextArea.select();
         document.execCommand('copy');
